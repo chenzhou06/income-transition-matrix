@@ -1,7 +1,7 @@
 # construct income variable from CHIP dataset.
 
 # load libraries
-library(readr, help, pos = 2, lib.loc = ".packages")
+library(readr)
 library(dplyr)
 
 # read data

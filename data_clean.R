@@ -49,7 +49,7 @@ rural95_inc <- rural95_id %>%
     # remove NAs by B202 (AMI as above), B203 (TNRI), B204 (other cash)
     filter(!is.na(B202) & !is.na(B203) & !is.na(B204)) %>%
     mutate(inc = B202 * 12 + B203 + B204)
-rural95_inc <- rural95_inc %>%
+rural95_inc %>%
     select(ind_id, B202, B203, B204, inc) %>%
     View()
 rural02_inc <- rural02_id %>%
@@ -62,8 +62,18 @@ rural02_inc %>%
     select(ind_id, P1_43, P1_57, inc) %>%
     View()
 
-summary(rural88_inc$ami_na)
-summary(rural88_inc$tnri88_na)
-summary(rural88_inc$inc)
-View(rural88_inc[, c("AMI88", "TNRI88", "ami_na", "tnri88_na", "inc")])
-sum(!is.na(rural88_inc$inc))
+# construct panel
+rural9502 <- rural95_inc %>% # panel 95 to 02 only rural
+    inner_join(rural02_inc, by="ind_id", suffix = c("95", "02")) %>%
+    select(ind_id, starts_with("inc")) %>%
+    filter(inc95 != 0 & inc02 != 0) # drop zeros, improper for real
+
+trans_m <- function(st, st2, tiles = 4) {
+    state1 <- ntile(st, tiles)
+    state2 <- ntile(st2, tiles)
+    count_table <- table(state1, state2)
+
+    count_table / rowSums(count_table)
+}
+
+with(rural9502, trans_m(inc95, inc02))

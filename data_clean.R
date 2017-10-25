@@ -33,16 +33,34 @@ rural02_id <- rural02 %>%
                                 paste0("0", P1_2))) %>%
     mutate(house = paste0(VILL, hous_pad0)) %>%
     mutate(ind_id = paste0(COUN, house, member_pad0))
-View(rural02_id[, c("COUN", "HOUS", "P1_2", "hous_pad0", "member_pad0", "ind_id")])
-
-# missing value
-rural88_na <- rural88_id %>%
-    mutate(ami_na = ifelse(AMI88>9999, NA, AMI88)) %>%
-    mutate(tnri88_na = ifelse(TNRI88==99999999, NA, TNRI88))
+# View(rural02_id[, c("COUN", "HOUS", "P1_2", "hous_pad0", "member_pad0", "ind_id")])
 
 # calculate total annual income
-rural88_inc <- rural88_na %>%   # regular average monthly wage * 12
-    mutate(inc = ami_na * 12 + tnri88_na)  # + non-regular income
+rural88_inc <- rural88_id %>%
+    # remove NAs
+    filter(!is.na(AMI88) & !is.na(TNRI88) & !is.na(OCI88)) %>%
+    # regular average monthly wage * 12 + non-regular income +
+    # other cash income
+    mutate(inc = AMI88 * 12 + TNRI88 + OCI88)
+rural88_inc %>%
+    select(ind_id, AMI88, TNRI88, OCI88, inc) %>%
+    View()
+rural95_inc <- rural95_id %>%
+    # remove NAs by B202 (AMI as above), B203 (TNRI), B204 (other cash)
+    filter(!is.na(B202) & !is.na(B203) & !is.na(B204)) %>%
+    mutate(inc = B202 * 12 + B203 + B204)
+rural95_inc <- rural95_inc %>%
+    select(ind_id, B202, B203, B204, inc) %>%
+    View()
+rural02_inc <- rural02_id %>%
+    # remove NAs
+    # P1_43: total wage income
+    # P1_57: total non-wage income
+    filter(!is.na(P1_43) & !is.na(P1_57)) %>%
+    mutate(inc = P1_43 + P1_57)
+rural02_inc %>%
+    select(ind_id, P1_43, P1_57, inc) %>%
+    View()
 
 summary(rural88_inc$ami_na)
 summary(rural88_inc$tnri88_na)
